@@ -399,23 +399,10 @@
         </div>
 
         <sc-if value="{{ projectTab_signal }}" hint-placeholder-val="{{ false }}">
-          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:16px;">
             <div style="{{ cardStyle }}display:flex;flex-direction:column;">
-              <div style="{{ sectionTitleStyle }}margin-bottom:12px;">WBS 진행률</div>
-              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:16px;">
-                <svg width="88" height="88" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#e7e9ec" stroke-width="10"/>
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#828fff" stroke-width="10" stroke-linecap="round" transform="rotate(-90 50 50)" style="{{ wbsDonutStyle }}"/>
-                </svg>
-                <div>
-                  <div style="font-size:22px;font-weight:700;">{{ wbsProgress }}%</div>
-                  <div style="font-size:11px;color:#62666d;">완료 {{ doneCount }} / {{ totalCount }} 카드</div>
-                </div>
-              </div>
-            </div>
-            <div style="{{ cardStyle }}display:flex;flex-direction:column;">
-              <div style="{{ sectionTitleStyle }}margin-bottom:14px;">주간 활동 밀도</div>
-              <div style="flex:1;display:flex;align-items:flex-end;gap:6px;">
+              <div style="{{ sectionTitleStyle }}margin-bottom:16px;">주간 활동 밀도</div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:8px;min-height:96px;">
                 <sc-for list="{{ heatmapBars }}" as="hb" hint-placeholder-count="7">
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end;height:100%;">
                     <div style="{{ hb.style }}"></div>
@@ -425,8 +412,8 @@
               </div>
             </div>
             <div style="{{ cardStyle }}display:flex;flex-direction:column;">
-              <div style="{{ sectionTitleStyle }}margin-bottom:14px;">참가자 · 자료</div>
-              <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;">
+              <div style="{{ sectionTitleStyle }}margin-bottom:16px;">참가자 · 자료</div>
+              <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
                   <div style="display:flex;align-items:center;gap:4px;">
                     <sc-for list="{{ participantDots }}" as="p" hint-placeholder-count="5">
@@ -482,14 +469,28 @@
           </sc-for>
         </div>
 
+        <div style="{{ cardStyleRaw }}display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+          <span style="font-size:12.5px;font-weight:600;white-space:nowrap;">WBS 진행률</span>
+          <div style="flex:1;height:8px;background:#e7e9ec;border-radius:9999px;overflow:hidden;">
+            <div style="{{ wbsBarStyle }}"></div>
+          </div>
+          <span style="font-size:12.5px;font-weight:700;white-space:nowrap;">{{ wbsProgress }}%</span>
+          <span style="font-size:11px;color:#62666d;white-space:nowrap;">완료 {{ doneCount }} / {{ totalCount }} 카드</span>
+        </div>
+
         <div style="width:100%;">
             <sc-if value="{{ kanbanView_board }}" hint-placeholder-val="{{ true }}">
-              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;">
+              <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:4px;">
                 <sc-for list="{{ columns }}" as="col" hint-placeholder-count="4">
-                  <div onDrop="{{ col.onDrop }}" onDragOver="{{ preventDefault }}" style="min-width:0;background:#f7f7f8;border:1px solid #e4e5e8;border-radius:12px;padding:12px;min-height:420px;">
+                  <div onDrop="{{ col.onDrop }}" onDragOver="{{ preventDefault }}" style="flex:1 0 240px;min-width:240px;background:#f7f7f8;border:1px solid #e4e5e8;border-radius:12px;padding:12px;min-height:420px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 2px;">
-                      <span style="font-size:12.5px;font-weight:600;">{{ col.title }}</span>
-                      <span style="font-size:11px;color:#62666d;background:#eef0f3;padding:2px 7px;border-radius:9999px;">{{ col.count }}</span>
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:12.5px;font-weight:600;">{{ col.title }}</span>
+                        <span style="font-size:11px;color:#62666d;background:#eef0f3;padding:2px 7px;border-radius:9999px;">{{ col.count }}</span>
+                      </div>
+                      <sc-if value="{{ col.canAdd }}" hint-placeholder-val="{{ false }}">
+                        <div onClick="{{ col.onAddCard }}" style="width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7280;font-size:15px;font-weight:600;">+</div>
+                      </sc-if>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:8px;">
                       <sc-for list="{{ col.cards }}" as="card" hint-placeholder-count="2">
@@ -827,6 +828,15 @@ class Component extends DCLogic {
     this.navigateTo(this.state.loginRole === 'student' ? 'home' : 'coach');
   }
 
+  addCard(colId) {
+    this._cardSeq = (this._cardSeq || 0) + 1;
+    const cols = this.state.columns.map(c => ({ ...c, cards: [...c.cards] }));
+    cols.find(c => c.id === colId).cards.push({
+      id: `new${this._cardSeq}`, title: '새 업무', label: '문서', due: '9/10', assignee: '-',
+    });
+    this.setState({ columns: cols });
+  }
+
   dragStart(colId, cardId) { this.setState({ draggingId: { colId, cardId } }); }
   dropOn(targetColId) {
     const d = this.state.draggingId;
@@ -1036,11 +1046,10 @@ class Component extends DCLogic {
     const totalCount = s.columns.reduce((n, c) => n + c.cards.length, 0);
     const doneCount = s.columns.find(c => c.id === 'done').cards.length;
     const wbsProgress = Math.round((doneCount / totalCount) * 100);
-    const wbsDonut = this.donutOffset(wbsProgress, 40);
-    const wbsDonutStyle = `stroke-dasharray:${wbsDonut.circumference}px;stroke-dashoffset:${m ? wbsDonut.offset : wbsDonut.circumference}px;transition:stroke-dashoffset 1.2s ease;`;
+    const wbsBarStyle = `height:100%;border-radius:9999px;background:#5e6ad2;width:${m ? wbsProgress : 0}%;transition:width 0.9s cubic-bezier(0.34,1.56,0.64,1);`;
 
     const columns = s.columns.map(col => ({
-      id: col.id, title: col.title, count: col.cards.length,
+      id: col.id, title: col.title, count: col.cards.length, canAdd: col.id === 'todo', onAddCard: () => this.addCard(col.id),
       onDrop: () => this.dropOn(col.id),
       cards: col.cards.map(card => {
         const lc = this.labelColors[card.label];
@@ -1165,7 +1174,7 @@ class Component extends DCLogic {
       projectTabs, projectTab_kanban: s.projectTab === 'kanban', projectTab_signal: s.projectTab === 'signal',
       teamSignal, memberSignals,
       columns, allCardsFlat, calendarCells, preventDefault: (e) => e.preventDefault(),
-      wbsProgress, wbsDonutStyle, doneCount, totalCount, heatmapBars, teamProgress,
+      wbsProgress, wbsBarStyle, doneCount, totalCount, heatmapBars, teamProgress,
       participantCount, participantDots, contentBars,
       alertLearners, coachingQueue, aiThreads, chatMessages,
     };

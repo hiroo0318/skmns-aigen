@@ -762,8 +762,10 @@ class Component extends DCLogic {
   sizeGravityCanvas() {
     if (!this.canvasRef) return;
     const rect = this.canvasRef.parentElement.getBoundingClientRect();
-    this.canvasRef.width = rect.width;
-    this.canvasRef.height = rect.height;
+    const w = Math.round(rect.width), h = Math.round(rect.height);
+    if (!w || !h) return;
+    if (this.canvasRef.width !== w) this.canvasRef.width = w;
+    if (this.canvasRef.height !== h) this.canvasRef.height = h;
   }
 
   onHeroMouseMove(e) {
@@ -777,6 +779,7 @@ class Component extends DCLogic {
   drawGravity() {
     const canvas = this.canvasRef;
     if (!canvas) return;
+    this.sizeGravityCanvas();
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
     if (!w || !h) return;
